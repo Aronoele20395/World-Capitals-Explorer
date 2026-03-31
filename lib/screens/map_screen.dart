@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' hide Visibility;
 import 'package:world_capitals_explorer/core/cubit/map_cubit.dart';
 import 'package:world_capitals_explorer/models/country.dart';
+import 'package:world_capitals_explorer/widgets/continent_legend.dart';
 import 'package:world_capitals_explorer/widgets/country_bottom_sheet.dart';
 
 import '../core/cubit/map_state.dart';
@@ -78,6 +79,37 @@ class _MapScreenState extends State<MapScreen> {
                     countries: state.countries,
                     onLoad: _addMarkers,
                   ),
+
+                //Not the usual AppBar in order to overlay the map widget and not to push it down
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Text("World Capitals Explorer", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.3),),
+                          const Spacer(),
+
+                          if(state is MapLoaded)
+                            Text('${(state as MapLoaded).countries.where((c) => c.hasCoordinates).length} countries', style: const TextStyle(color: Colors.white54, fontSize: 12),)
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                Positioned(right: 16, bottom: 32, child: ContinentLegend())
               ],
             ),
           );
@@ -117,16 +149,24 @@ class _MapScreenState extends State<MapScreen> {
       _annotationToCountry[id] = countriesWithCoord[i];
     }
 
-    _annotationManager!.tapEvents(onTap: (CircleAnnotation annotation) {
-      _onMarkerTapped(annotation);
-    });
+    _annotationManager!.tapEvents(
+      onTap: (CircleAnnotation annotation) {
+        _onMarkerTapped(annotation);
+      },
+    );
   }
 
   void _onMarkerTapped(CircleAnnotation annotation) {
     final country = _annotationToCountry[annotation.id];
     if (country == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Country data not available"), duration: Duration(seconds: 2),));
-    };
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Country data not available"),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+    ;
     _showCountryBottomSheet(country!);
   }
 
@@ -142,16 +182,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Color _getColorForContinent(String continent) {
-    return switch (continent) {
-      'Europe' => const Color(0xFF4FC3F7),
-      'Asia' => const Color(0xFFFFB74D),
-      'Africa' => const Color(0xFFA5D6A7),
-      'North America' => const Color(0xFFCE93D8),
-      'South America' => const Color(0xFFF48FB1),
-      'Oceania' => const Color(0xFF80DEEA),
-      'Antarctica' => const Color(0xFFB0BEC5),
-      _ => const Color(0xFFEEEEEE),
-    };
+    return ContinentLegend.continentColors[continent] ?? const Color(0xFFEEEEEE);
   }
 }
 

@@ -8,10 +8,7 @@ import 'core/di/injection.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const mapboxToken = String.fromEnvironment('MAPBOX_PUBLIC_TOKEN');
-  MapboxOptions.setAccessToken(
-    mapboxToken.isNotEmpty ? mapboxToken : '',
-  );
+  MapboxOptions.setAccessToken("pk.eyJ1IjoiYXJvbm9lbGUyMDM5NSIsImEiOiJjbW5jeDZjODcxN2I5MnBzaGo3cWJ2MTVkIn0.faYY_AgqsyzJ9kMYX7BIZQ");
   setUpDependencies();
   runApp(const MyApp());
 }

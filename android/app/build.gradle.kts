@@ -28,19 +28,6 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        buildConfigField(
-            "String",
-            "MAPBOX_PUBLIC_TOKEN",
-            "\"${secrets.getProperty("MAPBOX_PUBLIC_TOKEN", "")}\""
-        )
-
-        manifestPlaceholders["MAPBOX_PUBLIC_TOKEN"] =
-            secrets.getProperty("MAPBOX_PUBLIC_TOKEN", "")
-    }
-
-    buildFeatures {
-        buildConfig = true
     }
 
     buildTypes {

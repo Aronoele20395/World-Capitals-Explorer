@@ -22,7 +22,7 @@
               />
             <meta-data
                 android:name="com.mapbox.token"
-                android:value="${MAPBOX_PUBLIC_TOKEN}"/>
+                android:value="pk.eyJ1IjoiYXJvbm9lbGUyMDM5NSIsImEiOiJjbW5jeDZjODcxN2I5MnBzaGo3cWJ2MTVkIn0.faYY_AgqsyzJ9kMYX7BIZQ"/>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
