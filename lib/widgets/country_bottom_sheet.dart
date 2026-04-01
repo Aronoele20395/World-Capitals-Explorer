@@ -102,7 +102,6 @@ class _InfoRow extends StatelessWidget {
   final String value;
 
   const _InfoRow({
-    super.key,
     required this.icon,
     required this.label,
     required this.value,

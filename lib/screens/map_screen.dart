@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' hide Visibility;
 import 'package:world_capitals_explorer/core/cubit/map_cubit.dart';
 import 'package:world_capitals_explorer/models/country.dart';
+import 'package:world_capitals_explorer/screens/error_view.dart';
 import 'package:world_capitals_explorer/widgets/continent_legend.dart';
 import 'package:world_capitals_explorer/widgets/country_bottom_sheet.dart';
 
@@ -22,6 +23,11 @@ class _MapScreenState extends State<MapScreen> {
   //map annotation markers to a country
   final Map<String, Country> _annotationToCountry = {};
 
+  //to force mapwodget rebuild on retry after connection or other type error
+  Key _mapKey = UniqueKey();
+  //state to handle MapBox native errors
+  String? _mapboxError;
+
   @override
   void initState() {
     super.initState();
@@ -33,23 +39,17 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocConsumer<MapCubit, MapState>(
-        listener: (context, state) {
-          if (state is MapError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          }
-        },
+        listener: (context, state) {},
         builder: (context, state) {
           return SafeArea(
             child: Stack(
               children: [
-                //Visibility to hide the map widget while loading keeping it into the widget tree. Map widget is expensive to rebuild, so i don't want to rebuild it when the status changes
+                //Visibility to hide the map widget while loading keeping it into the widget tree. Map widget is expensive to rebuild, so I don't want to rebuild it when the status changes
                 Visibility(
                   visible: state is MapLoaded,
                   child: MapWidget(
                     //key to avoid useless rebuilds of the map widget
-                    key: const ValueKey("mapbox_map"),
+                    key: _mapKey,
                     styleUri: MapboxStyles.DARK,
                     onMapCreated: (controller) async {
                       _mapboxMap = controller;
@@ -63,12 +63,42 @@ class _MapScreenState extends State<MapScreen> {
                         await _addMarkers(currentState.countries);
                       }
                     },
+                    onMapLoadErrorListener: (event) {
+                    if (mounted) {
+                      setState(() => _mapboxError =
+                      'Map could not be loaded. Please check your connection.');
+                    }
+                  },
+                    onStyleLoadedListener: (_) {
+                      if (_mapboxError != null && mounted) {
+                        setState(() => _mapboxError = null);
+                      }
+                    },
                     cameraOptions: CameraOptions(
                       center: Point(coordinates: Position(12.4964, 41.9028)),
                       zoom: 1.5,
                     ),
                   ),
                 ),
+
+
+                //if there's some errors in building the map, shows an error page
+                if (_mapboxError != null)
+                  Container(
+                    color: const Color(0xFF121212),
+                    child: ErrorView(
+                      title: 'Map error',
+                      message: _mapboxError!,
+                      onRetry: () {
+                        setState(() {
+                          _mapboxError = null;
+                          _mapKey = UniqueKey();
+                          _annotationToCountry.clear();
+                          _annotationManager = null;
+                        });
+                      },
+                    ),
+                  ),
 
                 if (state is MapLoading)
                   const Center(child: CircularProgressIndicator()),
@@ -81,6 +111,7 @@ class _MapScreenState extends State<MapScreen> {
                   ),
 
                 //Not the usual AppBar in order to overlay the map widget and not to push it down
+                if (state is! MapError && _mapboxError == null)
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -98,18 +129,33 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Text("World Capitals Explorer", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.3),),
+                          const Text(
+                            "World Capitals Explorer",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
                           const Spacer(),
 
-                          if(state is MapLoaded)
-                            Text('${(state as MapLoaded).countries.where((c) => c.hasCoordinates).length} countries', style: const TextStyle(color: Colors.white54, fontSize: 12),)
+                          if (state is MapLoaded)
+                            Text(
+                              '${(state).countries.where((c) => c.hasCoordinates).length} countries',
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                              ),
+                            ),
                         ],
                       ),
                     ),
                   ),
                 ),
 
-                Positioned(right: 16, bottom: 32, child: ContinentLegend())
+                if( state is MapLoaded && _mapboxError == null)
+                Positioned(right: 16, bottom: 32, child: ContinentLegend()),
               ],
             ),
           );
@@ -165,9 +211,9 @@ class _MapScreenState extends State<MapScreen> {
           duration: Duration(seconds: 2),
         ),
       );
+      return;
     }
-    ;
-    _showCountryBottomSheet(country!);
+    _showCountryBottomSheet(country);
   }
 
   void _showCountryBottomSheet(Country country) {
@@ -182,7 +228,8 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Color _getColorForContinent(String continent) {
-    return ContinentLegend.continentColors[continent] ?? const Color(0xFFEEEEEE);
+    return ContinentLegend.continentColors[continent] ??
+        const Color(0xFFEEEEEE);
   }
 }
 
