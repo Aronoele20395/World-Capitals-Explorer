@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 class CapitalsService {
-  static Map<String, (double, double)>? _cache;
+  Map<String, (double, double)>? _cache;
 
-  static Future<Map<String, (double, double)>> loadCoordinates() async {
+  Future<Map<String, (double, double)>> loadCoordinates() async {
     if (_cache != null) return _cache!;
 
     final raw = await rootBundle.loadString('assets/data/capitals.json');

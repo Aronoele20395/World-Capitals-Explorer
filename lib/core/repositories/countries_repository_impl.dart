@@ -6,12 +6,14 @@ import 'countries_repository.dart';
 
 class CountriesRepositoryImpl implements CountriesRepository {
   final GraphQLClient _client;
+  //used for testing
+  final CapitalsService _capitalsService;
 
-  CountriesRepositoryImpl({required GraphQLClient client}) : _client = client;
+  CountriesRepositoryImpl({required GraphQLClient client, CapitalsService? capitalsService}) : _client = client, _capitalsService = capitalsService ?? CapitalsService();
 
   @override
   Future<List<Country>> getCountries() async {
-    final coordinates = await CapitalsService.loadCoordinates();
+    final coordinates = await _capitalsService.loadCoordinates();
 
     final result = await _client.query(
       QueryOptions(
