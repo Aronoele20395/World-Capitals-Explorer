@@ -54,6 +54,15 @@ class _MapScreenState extends State<MapScreen> {
                     onMapCreated: (controller) async {
                       _mapboxMap = controller;
 
+                      await controller.scaleBar.updateSettings(
+                        ScaleBarSettings(
+                          enabled: true,
+                          position: OrnamentPosition.BOTTOM_LEFT,
+                          marginBottom: 32,
+                          marginLeft: 16,
+                        ),
+                      );
+
                       _annotationManager = await controller.annotations
                           .createCircleAnnotationManager();
 
