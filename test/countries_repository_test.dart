@@ -122,5 +122,35 @@ void main() {
       expect(countries.first.latitude, null);
       expect(countries.first.longitude, null);
     });
+
+    test("country with known capital has valid coordinates", () async {
+      final fakeData = {
+        'countries': [
+          {
+            'code': 'IT',
+            'name': 'Italy',
+            'capital': 'Rome',
+            'emoji': '🇮🇹',
+            'continent': {'name': 'Europe'},
+            'languages': [{'name': 'Italian'}],
+            'currency': 'EUR',
+          },
+        ]
+      };
+
+      when(() => mockClient.query(any())).thenAnswer(
+            (_) async => QueryResult(
+          options: QueryOptions(document: gql("{ countries { code } }")),
+          data: fakeData,
+          source: QueryResultSource.network,
+        ),
+      );
+
+      final countries = await repository.getCountries();
+
+      expect(countries.first.hasCoordinates, true);
+      expect(countries.first.latitude, 41.9);
+      expect(countries.first.longitude, 12.4);
+    });
   });
 }
